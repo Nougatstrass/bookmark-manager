@@ -6,9 +6,13 @@ dotenv.config();
 
 export default defineConfig({
     schema: "./src/db/schema.ts",
-    out: "./src/db/migrations",
-    driver: "pg",
+    out: "./drizzle",
+    dialect: "postgresql",
     dbCredentials: {
-        connectionString: process.env.DATABASE_URL!
+        host: "localhost",
+        port: 5432,
+        user: "postgres",
+        database: "bookmarks",
+        ssl: false
     }
-});
+} as any);
