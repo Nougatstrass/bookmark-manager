@@ -114,4 +114,46 @@ router.post("/", async (req, res) => {
     }
 });
 
+router.get("/", async (req, res) => {
+    try {
+        // 1. Get all bookmarks
+        const allBookmarks = await db.query.bookmarks.findMany();
+
+        if (allBookmarks.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        // 2. Get all tags for the found bookmark IDs
+        const bookmarkIds = allBookmarks.map((b) => b.id);
+
+        const allTags = await db.query.bookmarkTags.findMany({
+            where: (bt, { inArray }) => inArray(bt.bookmarkId, bookmarkIds),
+            with: {
+                tag: true // eager-load the tag  info from the relation
+            }
+        });
+
+        // 3. Group tags by bookmarkId
+        const tagsByBookmarkId = new Map<number, string[]>();
+
+        for (const bt of allTags) {
+            const tagList = tagsByBookmarkId.get(bt.bookmarkId) ?? [];
+            tagList.push(bt.tag.name);
+            tagsByBookmarkId.set(bt.bookmarkId, tagList);
+        }
+
+        // 4. Return bookmarks with tags
+        const withTags = allBookmarks.map((b) => ({
+            ...b,
+            tags: tagsByBookmarkId.get(b.id) ?? []
+        }));
+
+        return res.status(200).json(withTags);
+
+    } catch(err) {
+        console.error("GET /bookmarks failed:", err);
+        return res.status(500).json({ error: "Failed to fetch bookmarks." });
+    }
+});
+
 export default router;

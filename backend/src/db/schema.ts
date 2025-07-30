@@ -1,5 +1,6 @@
 
 import { pgTable, serial, varchar, boolean, timestamp, integer } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 // Bookmarks table
 export const bookmarks = pgTable("bookmarks", {
@@ -19,8 +20,19 @@ export const tags = pgTable("tags", {
     name: varchar("name", { length: 64 }).notNull().unique()
 });
 
-// Join table for bookmarks - tags (many to many)
 export const bookmarkTags = pgTable("bookmark_tags", {
     bookmarkId: integer("bookmark_id").notNull().references(() => bookmarks.id, { onDelete: "cascade" }),
     tagId: integer("tag_id").notNull().references(() => tags.id, { onDelete: "cascade" } )
 });
+
+// Bookmarks-tags many-to-many-relation
+export const bookmarkTagsRelations = relations(bookmarkTags, ({ one }) => ({
+    tag: one(tags, {
+        fields: [bookmarkTags.tagId],
+        references: [tags.id]
+    }),
+    bookmark: one(bookmarks, {
+        fields: [bookmarkTags.bookmarkId],
+        references: [bookmarks.id]
+    })
+}));
