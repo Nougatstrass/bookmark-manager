@@ -3,7 +3,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db";
 import { bookmarks, tags, bookmarkTags } from "../db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, and } from "drizzle-orm";
+import { json } from "body-parser";
 
 const router = Router();
 
@@ -17,7 +18,7 @@ const createBookmarkSchema = z.object({
     tags: z.array(z.string().trim().min(1)).optional().default([])
 });
 
-// Create bookmark with tags
+// Create a bookmark with tags
 router.post("/", async (req, res) => {
     const parsed = createBookmarkSchema.safeParse(req.body);
 
@@ -114,6 +115,7 @@ router.post("/", async (req, res) => {
     }
 });
 
+// Fetch all bookmarks with their tags
 router.get("/", async (req, res) => {
     try {
         // 1. Get all bookmarks
@@ -153,6 +155,70 @@ router.get("/", async (req, res) => {
     } catch(err) {
         console.error("GET /bookmarks failed:", err);
         return res.status(500).json({ error: "Failed to fetch bookmarks." });
+    }
+});
+
+// Fetch one bookmark by ID
+router.get("/:id", async (req, res) => {
+    const id = Number(req.params.id);
+
+    // Validate that ID is a positive integer
+    if (isNaN(id) || id <= 0 || !Number.isInteger(id)) {
+        return res.status(400).json({ error: "Invalid bookmark ID" });
+    }
+
+    try {
+        // Fetch the bookmark with its tags (via the join table)
+        const bookmark = await db.query.bookmarks.findFirst({
+            where: (fields, { eq }) => eq(fields.id, id),
+            with: {
+                tags: {
+                    columns: { id: false }, // Exclude row id from bookmarkTags table
+                    with: {
+                        tag: true // Fetch related tag from the tags table
+                    } 
+                }
+            }
+        }) as {
+            id: number;
+            url: string;
+            title: string | null;
+            description: string | null;
+            favorite: boolean;
+            showOnStart: boolean;
+            createdAt: Date;
+            updatedAt: Date;
+            tags: {
+                tag: {
+                    name: string;
+                };
+            }[];
+        };
+
+        // Not found?
+        if (!bookmark) {
+            return res.status(404).json({ error: "Bookmark not found" });
+        }
+
+        // Normalize the tag list into an array of tag names
+        const tagNames = bookmark.tags.map((bt) => bt.tag.name);
+
+        // Return bookmark with tags
+        return res.json({
+            id: bookmark.id,
+            url: bookmark.url,
+            title: bookmark.title,
+            description: bookmark.description,
+            favorite: bookmark.favorite,
+            showOnStart: bookmark.showOnStart,
+            createdAt: bookmark.createdAt,
+            updatedAt: bookmark.updatedAt,
+            tags: tagNames
+        });
+
+    } catch(err) {
+        console.error("GET /bookmarks/:id failed:", err);
+        return res.status(500).json({ error: "Internal server error" });
     }
 });
 
