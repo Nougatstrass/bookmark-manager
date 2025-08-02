@@ -222,7 +222,132 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-//
+// Zod schema for updating bookmark
+const updateBookmarkSchema = z.object({
+    url: z.string().url().optional(),
+    title: z.string().trim().min(1).optional().nullable(),
+    description: z.string().trim().optional().nullable(),
+    favorite: z.boolean().optional(),
+    showOnStart: z.boolean().optional(),
+    tags: z.array(z.string().trim().min(1)).optional()
+});
+
+// Update bookmark by ID
+router.put("/:id", async (req, res) => {
+    const id = Number(req.params.id);
+
+    if (isNaN(id) || id <= 0) {
+        return res.status(400).json({ error: "Invalid bookmark ID" });
+    }
+
+    const parsed = updateBookmarkSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+        return res.status(400).json({
+            error: "Invalid payload",
+            details: parsed.error.flatten()
+        });
+    }
+
+    const { url, title, description, favorite, showOnStart, tags: tagNames } = parsed.data;
+
+    try {
+        const result = await db.transaction(async(tx) => {
+            
+            // 1. Optional uniqueness check for URL (if provided)
+            if (url) {
+                const existing = await tx.select({ id: bookmarks.id })
+                    .from(bookmarks)
+                    .where(eq(bookmarks.url, url));
+
+                if (existing.length > 0 && existing[0].id !== id) {
+                    const e = new Error("URL already exists");
+                    // ts-expect-error
+                    e.message = "URL_EXISTS";
+                    throw e;
+                }
+            }
+
+            // 2. Update the bookmark (excluding tags for now)
+            const updateFields: any = {
+                ...(url && { url }),
+                title: title ?? null,
+                description: description ?? null,
+                ...(typeof favorite === "boolean" && { favorite }),
+                ...(typeof showOnStart === "boolean" && { showOnStart }),
+                upDatedAt: new Date()
+            };
+
+            const [updated] = await tx.update(bookmarks)
+                .set(updateFields)
+                .where(eq(bookmarks.id, id))
+                .returning();
+
+            if (!updated) {
+                return null;
+            }
+
+            // 3. Update tags if provided
+            if (tagNames) {
+                // Normalize input
+                const normalized = Array.from(
+                    new Set(tagNames.map((t) => t.trim()).filter(Boolean))
+                );
+
+                // Remove existing tag links
+                await tx.delete(bookmarkTags).where(eq(bookmarkTags.bookmarkId, id));
+
+                if (normalized.length > 0) {
+                    // Find existing tags
+                    const existingTags = await tx
+                        .select({ id: tags.id, name: tags.name })
+                        .from(tags)
+                        .where(inArray(tags.name, normalized)
+                    );
+
+                    const existingMap = new Map(existingTags.map((t) => [t.name, t.id]));
+                    const missingNames = normalized.filter((n) => !existingMap.has(n));
+
+                    let createdTags: { id: number; name: string }[] = [];
+
+                    if (missingNames.length > 0) {
+                        createdTags = await tx.insert(tags)
+                            .values(missingNames.map((name) => ( { name } )))
+                            .returning({ id: tags.id, name: tags.name });
+                    }
+
+                    const tagIds = [
+                        ...existingTags.map((t) => t.id),
+                        ...createdTags.map((t) => t.id)
+                    ];
+
+                    // Insert new tag relations
+                    await tx.insert(bookmarkTags).values(
+                        tagIds.map((tagId) =>({
+                            bookmarkId: id,
+                            tagId
+                        }))
+                    );
+                }
+            }
+            return updated;
+        });
+
+        if (!result) {
+            return res.status(404).json({ error: "Bookmark not found" });
+        }
+        return res.status(200).json(result);
+
+    } catch(err: any) {
+        if (err?.code === "URL_EXISTS" || err?.code === "23505") {
+            return res.status(409).json({ error: "A bookmark with this URL alreday exists" });
+        }
+        console.error("PUT /bookmarks/:id failed:", err);
+        return res.status(500).json({ error: "Failed to update bookmark" });
+    }
+});
+
+// Delete bookmark (with tags) from ID
 router.delete("/:id", async (req, res) => {
     const id = Number(req.params.id);
 
