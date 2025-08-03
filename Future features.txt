@@ -2,3 +2,4 @@
 1. Add filtering support to GET /bookmarks (For example: ?tag=react, ?favorite=true, ?search=foo)
 2. Cleanup/admin tool for tags
 3. Sorting & pagination to GET /bookmarks
+4. Find not-working url:s and provide ability to delete them.
