@@ -269,14 +269,13 @@ router.put("/:id", async (req, res) => {
             }
 
             // 2. Update the bookmark (excluding tags for now)
-            const updateFields: any = {
-                ...(url && { url }),
-                title: title ?? null,
-                description: description ?? null,
-                ...(typeof favorite === "boolean" && { favorite }),
-                ...(typeof showOnStart === "boolean" && { showOnStart }),
-                upDatedAt: new Date()
-            };
+            const updateFields: any = { updatedAt: new Date() }; // Always update timestamp
+
+            if (url !== undefined) updateFields.url = url;
+            if (title !== undefined) updateFields.title = title;
+            if (description !== undefined) updateFields.description = description;
+            if (showOnStart !== undefined) updateFields.showOnStart = showOnStart;
+            if (favorite !== undefined) updateFields.favorite = favorite;
 
             const [updated] = await tx.update(bookmarks)
                 .set(updateFields)
