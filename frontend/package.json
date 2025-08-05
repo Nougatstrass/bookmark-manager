@@ -13,13 +13,5 @@
     "nuxt": "^4.0.1",
     "vue": "^3.5.18",
     "vue-router": "^4.5.1"
-  },
-  "trustedDependencies": [
-    "@parcel/watcher"
-  ],
-  "devDependencies": {
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.11"
   }
 }
