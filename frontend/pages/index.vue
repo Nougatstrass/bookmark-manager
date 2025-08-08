@@ -36,7 +36,7 @@
     const { data, pending, error } = await list()
 
     const startBookmarks = computed<BookmarkWithTags[]>(
-        () => (data.value ?? []).filter(b => b.showOnStart)
+        () => ((data.value ?? []) as BookmarkWithTags[]).filter(b => b.showOnStart)
     )
 
 </script>

@@ -53,14 +53,18 @@
 
 <script setup lang="ts">
 
-import type { BookmarkWithTags } from '@/types/api'
-import { useBookmarks } from '@/composables/useBookmarks';
+    import type { BookmarkWithTags } from '@/types/api'
+    import { useBookmarks } from '@/composables/useBookmarks';
 
-const { list } = useBookmarks()
+    const { list } = useBookmarks()
 
-// SSR fetch, automatically reactive
-const { data, pending, error, refresh } = await list()
+    // SSR fetch, automatically reactive
+    const { data, pending, error, refresh } = await list()
 
-const bookmarks = computed<BookmarkWithTags[]>(() => data.value ?? [])
+    // const bookmarks = computed<BookmarkWithTags[]>(() => data.value ?? [])
+
+    const bookmarks = computed<BookmarkWithTags[]>(
+        () => (data.value ?? []) as BookmarkWithTags[]
+    )
 
 </script>
