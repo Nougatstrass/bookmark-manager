@@ -155,7 +155,13 @@
             emit('close')
 
         } catch(e: any) {
-            errorMsg.value = e?.data?.error || e?.message || 'Failed to save changes'
+            const msg = e?.data?.error || e?.message || ''
+
+            if (e?.status === 409 || /already exists/i.test(msg)) {
+                errorMsg.value = 'A bookmark with this URL already exists'
+            } else {
+                errorMsg.value = msg || 'Failed to save changes'
+            }
         } finally {
             saving.value = false
         }
