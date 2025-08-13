@@ -46,7 +46,7 @@
                 <div class="flex items-center gap-6">
                     <label class="inline-flex items-center gap-2">
                         <input type="checkbox" v-model="form.favorite" class="rounded" />
-                        <spa>Favorite</spa>
+                        <span>Favorite</span>
                     </label>
                     <label class="inline-flex items-center gap-2">
                         <input type="checkbox" v-model="form.showOnStart" class="rounded"/>
