@@ -11,6 +11,7 @@
                     <label for="url" class="block text-sm font-medium mb-1">URL *</label>
                     <input 
                         id="url" 
+                        ref="urlInputEl" 
                         v-model.trim="form.url" 
                         type="url" 
                         required 
@@ -84,7 +85,7 @@
 
 <script setup lang="ts">
 
-    import { reactive, ref, watch } from 'vue'
+    import { reactive, ref, watch, nextTick } from 'vue'
     import Modal from '@/components/ui/Modal.vue'
     import type { BookmarkWithTags } from '@/types/api'
     import { useBookmarks } from '@/composables/useBookmarks'
@@ -113,6 +114,10 @@
     const saving = ref(false)
     const errorMsg = ref<string | null>(null)
 
+    // Ref for the first input
+    const urlInputEl = ref<HTMLInputElement | null>(null)
+
+    // When bookmark changes, fill form
     watch(
         () => props.bookmark,
         (b) => {
@@ -126,6 +131,18 @@
             errorMsg.value = null
         },
         { immediate: true }
+    )
+
+    // When modal opens, focus the URL input (after DOM updates)
+    watch(
+        () => props.open,
+        async (isOpen) => {
+            if (isOpen) {
+                await nextTick()
+                urlInputEl.value?.focus()
+                urlInputEl.value?.select()  // Handy: select existing URL
+            }
+        }
     )
 
     const onClose = () => emit('close')
