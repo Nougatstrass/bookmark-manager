@@ -88,19 +88,39 @@
 			</p>
 
 			<template #footer>
+
 				<div class="flex items-center justify-end gap-2">
+
 					<button 
 						@click="closeConfirm" 
 						:disabled="deleting" 
 						class="rounded boerder px-4 py-2 hover:bg-gray-100">
 						Cancel
 					</button>
+
 					<button 
 						@click="confirmDelete" 
-						:disabled="deleting">
+						:disabled="deleting" 
+						:aria-busy="deleting ? 'true' : 'false'" 
+						aria-label="Confirm delete" 
+						class="inline-flex items-center gap-2 rounded bg-red-600 text-white 
+							px-4 py-2 hover:bg-red-700 disabled:opacity-50">
+							<svg 
+								v-if="deleting" 
+								view-box="0 0 24 24" 
+								fill="none" 
+								aria-hidden="true" 
+								class="h-4 w-4 animate-spin">
+								<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" 
+									class="opacity-25" />
+								<path fill="currentColor" d="M4 12a8 8 0 018-8v4A4 4 0 008 12H4z" 
+									class="opacity-75" />
+							</svg>
 						{{ deleting ? 'Deleting...' : 'Delete' }}
 					</button>
+
 				</div>
+
 			</template>
 
 		</Modal>

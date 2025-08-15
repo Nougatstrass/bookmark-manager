@@ -62,19 +62,41 @@
             <template #footer>
 
                 <div class="flex items-center justify-end gap-2">
+
                     <button 
                         @click="onClose" 
                         :disabled="saving" 
                         class="rounded border px-4 py-2 hover:bg-gray-100">
                         Cancel
                     </button>
-                    <button 
+
+                    <!-- <button 
                         @click="onSubmit" 
                         :disabled="saving" 
                         class="rounded bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 
                         disabled:opacity-50">
                         {{ saving ? 'Saving...' : 'Save changes' }}
+                    </button> -->
+
+                    <button
+                        @click="onSubmit" 
+                        :disabled="saving"
+                        :aria-busy="saving ? 'true' : 'false'"
+                        class="inline-flex items-center gap-2 rounded bg-blue-600 text-white 
+                            px-4 py-2 hover:bg-blue-700 disabled:opacity-50">
+                        <svg 
+                            v-if="saving" 
+                            view-box="0 0 24 24" 
+                            fill="none" 
+                            aria-hidden="true" 
+                            class="h-4 w-4 animate-spin"
+                        >
+                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25" />
+                            <path fill="currentColor" d="M4 12a8 8 0 018-8v4A4 4 0 008 12H4z" class="opacity-75" />
+                        </svg>
+                        {{ saving ? 'Saving...' : 'Save changes' }}
                     </button>
+
                 </div>
 
             </template>

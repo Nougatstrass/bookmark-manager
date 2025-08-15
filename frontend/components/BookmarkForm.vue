@@ -11,9 +11,11 @@
                 <label class="block text-sm font-medium mb-1" for="url">URL *</label>
                 <input 
                     id="url" 
+                    ref="urlInputEl" 
                     v-model.trim="form.url" 
                     type="url" 
                     required 
+                    autocomplete="url" 
                     placeholder="https://example.com" 
                     class="w-full rounded border px-3 py-2 focus:outline-none focus:ring"
                 />
@@ -67,13 +69,35 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <button 
-            type="submit" 
-            :disabled="submitting" 
-            class="rounded bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 disabled:opacity-50"
-            >
+
+            <button
+                type="submit" 
+                :disabled="submitting" 
+                :aria-busy="submitting ? 'true' : 'false'" 
+                class="inline-flex items-center gap-2 rounded bg-blue-600 text-white px-4 py-2 
+                hover:bg-blue-700 disabled:opacity-50">
+                <svg 
+                    v-if="submitting" 
+                    view-box="0 0 24 24" 
+                    fill="none" 
+                    aria-hidden="true" 
+                    class="h-4 w-4 animate-spin">
+                    <circle 
+                        cx="12" 
+                        cy="12" 
+                        r="10" 
+                        stroke="currentColor" 
+                        stroke-width="4" 
+                        class="opacity-25" 
+                    />
+                    <path 
+                        fill="currentColor" 
+                        d="M4 12a8 8 0 018-8v4A4 4 0 008 12H4z" 
+                        class="opacity-75" />
+                </svg>
                 {{ submitting ? 'Adding...' : 'Add bookmark' }}
             </button>
+
             <button 
                 type="button" 
                 :disabled="submitting" 
@@ -82,10 +106,11 @@
             >
                 Reset
             </button>
+
         </div>
 
-        <p v-if="errorMsg" class="text-red-600 text-sm">{{ errorMsg }}</p>
-        <p v-if="successMsg" class="text-green-700 text-sm">{{ successMsg }}</p>
+        <p v-if="errorMsg" aria-live="polite" class="text-red-600 text-sm">{{ errorMsg }}</p>
+        <p v-if="successMsg" aria-live="polite" class="text-green-700 text-sm">{{ successMsg }}</p>
 
     </form>
 
@@ -93,7 +118,7 @@
 
 <script setup lang="ts">
 
-    import { reactive, ref } from 'vue'
+    import { reactive, ref, onMounted, nextTick } from 'vue'
     import { useBookmarks } from '@/composables/useBookmarks'
     import type { BookmarkWithTags } from '@/types/api'
 
@@ -112,6 +137,15 @@
     const submitting = ref(false)
     const errorMsg = ref<string | null>(null)
     const successMsg = ref<string | null>(null)
+
+    // First-field autofocus
+    const urlInputEl = ref<HTMLInputElement | null>(null)
+
+    onMounted(async () => {
+        await nextTick()
+        urlInputEl.value?.focus()
+        urlInputEl?.value?.select()     // Optional: select the field
+    })
 
     const parseTags = (input: string) =>
         Array.from(
@@ -132,6 +166,9 @@
         form.showOnStart = false
         errorMsg.value = null
         successMsg.value = null
+
+        // Refocus after reset
+        nextTick(() => urlInputEl.value?.focus())
     }
 
     const onSubmit = async () => {
