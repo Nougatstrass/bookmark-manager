@@ -21,7 +21,7 @@
 		<!-- List -->
 		<ul v-else class="space-y-3">
 
-			<li v-for="b in bookmarks" :key="b.id" class="rounded border bg-white p-4 shadow-sm">
+			<li v-for="b in items" :key="b.id" class="rounded border bg-white p-4 shadow-sm">
 
 				<div class="flex items-start justify-between gap-4">
 					<div>
@@ -55,6 +55,7 @@
 						<button 
 							@click="askDelete(b)" 
 							title="Delete" 
+							:disabled="deleting && toDelete?.id === b.id" 
 							class="rounded border px-2 py-1 text-sm hover:bg-red-50 text-red-600 border-red-300">
 							Delete
 						</button>					
@@ -63,7 +64,7 @@
 				</div>
 
 				<p class="mt-2 text-xs text-gray-400">
-					Updated: {{ new Date(b.updatedAt).toLocaleDateString() }}
+					Updated: {{ new Date(b.updatedAt).toLocaleString() }}
 				</p>
 
 			</li>
@@ -94,20 +95,20 @@
 					<button 
 						@click="closeConfirm" 
 						:disabled="deleting" 
-						class="rounded boerder px-4 py-2 hover:bg-gray-100">
+						class="rounded border px-4 py-2 hover:bg-gray-100">
 						Cancel
 					</button>
 
 					<button 
 						@click="confirmDelete" 
-						:disabled="deleting" 
+						:disabled="deleting"
 						:aria-busy="deleting ? 'true' : 'false'" 
 						aria-label="Confirm delete" 
 						class="inline-flex items-center gap-2 rounded bg-red-600 text-white 
 							px-4 py-2 hover:bg-red-700 disabled:opacity-50">
 							<svg 
 								v-if="deleting" 
-								view-box="0 0 24 24" 
+								viewBox="0 0 24 24" 
 								fill="none" 
 								aria-hidden="true" 
 								class="h-4 w-4 animate-spin">
@@ -144,6 +145,14 @@
 
 	const bookmarks = computed<BookmarkWithTags[]>(() => (data.value ?? []) as BookmarkWithTags[])
 
+	// Local working list the UI renders
+	const items = ref<BookmarkWithTags[]>([])
+
+	// Kepp items in sync with server data on initial load/refresh
+	watchEffect(() => {
+		items.value = (data.value ?? []) as BookmarkWithTags[]
+	})
+
 	// Edit modal state
 	const editOpen = ref(false)
 	const selected = ref<BookmarkWithTags | null>(null)
@@ -158,15 +167,11 @@
 		selected.value = null
 	}
 
-	const handleCreated = async () => {
-		await refresh() // Fetch latest list after creating a bookmark
-	}
-
 	const handleSaved = async () => {
 		await refresh()
 	}
 
-	// Delete confirm modal
+	// Delete confirm modal state
 	const confirmOpen = ref(false)
 	const deleting = ref(false)
 	const toDelete = ref<BookmarkWithTags | null>(null)
@@ -181,22 +186,41 @@
 		toDelete.value = null
 	}
 
+	// Optimistic delete
 	const confirmDelete = async () => {
 		if (!toDelete.value) return
 
 		deleting.value = true
 
+		// 1. Snapshot current list to allow rollback
+		const previous = items.value.slice()
+
+		// 2. Optimistically remove from UI
+		const id = toDelete.value.id
+		items.value = items.value.filter(b => b.id !== id)
+
 		try {
-			await remove(toDelete.value.id)
+			// 3. Call API in the background
+			await remove(id)
+
+			// 4. Optionally refresh to sync with server (keeps tags, dates 100 % accurate)
 			await refresh()
+
+			// 5. Close the confirm dialog
 			closeConfirm()
 
-		} catch(e) {
-			// You could surface a toast here
-			console.error(e)
+		} catch(e: any) {
+			// Roll back on failure
+			items.value = previous
+			console.error('Delete failed:', e?.data.error || e?.message)
+			// You can also surface a toast here later
 		} finally {
 			deleting.value = false
 		}
+	}
+
+	const handleCreated = async () => {
+		await refresh() // Fetch latest list after creating a bookmark
 	}
 
 </script>
