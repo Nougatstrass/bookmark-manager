@@ -53,9 +53,7 @@
                         <input type="checkbox" v-model="form.showOnStart" class="rounded"/>
                         <span>Show on Start</span>
                     </label>
-                </div>
-
-                <p v-if="errorMsg" class="text-red-600 text-sm">{{ errorMsg }}</p>
+                </div>     
 
             </form>
 
@@ -69,14 +67,6 @@
                         class="rounded border px-4 py-2 hover:bg-gray-100">
                         Cancel
                     </button>
-
-                    <!-- <button 
-                        @click="onSubmit" 
-                        :disabled="saving" 
-                        class="rounded bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 
-                        disabled:opacity-50">
-                        {{ saving ? 'Saving...' : 'Save changes' }}
-                    </button> -->
 
                     <button
                         @click="onSubmit" 
@@ -111,6 +101,7 @@
     import Modal from '@/components/ui/Modal.vue'
     import type { BookmarkWithTags } from '@/types/api'
     import { useBookmarks } from '@/composables/useBookmarks'
+    import { useToast } from '@/composables/useToast'
 
     const props = defineProps<{
         open: boolean
@@ -138,6 +129,8 @@
 
     // Ref for the first input
     const urlInputEl = ref<HTMLInputElement | null>(null)
+
+    const toast = useToast()
 
     // When bookmark changes, fill form
     watch(
@@ -190,6 +183,8 @@
                 tags
             })
 
+            toast.success('Changes saved')
+
             emit('saved')   // Parent will refresh
             emit('close')
 
@@ -197,9 +192,9 @@
             const msg = e?.data?.error || e?.message || ''
 
             if (e?.status === 409 || /already exists/i.test(msg)) {
-                errorMsg.value = 'A bookmark with this URL already exists'
+                toast.error('A bookmark with this URL already exists')
             } else {
-                errorMsg.value = msg || 'Failed to save changes'
+                toast.error(errorMsg.value || 'Failed to save changes')
             }
         } finally {
             saving.value = false

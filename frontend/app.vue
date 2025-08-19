@@ -1,8 +1,13 @@
+
 <template>
+
   <div>
+
     <!-- Navigation -->
     <nav class="bg-gray-800 p-4 text-white shadow-md">
+
       <div class="mx-auto flex max-w-6xl items-center justify-between">
+
         <!-- Logo / App name -->
         <div class="text-lg font-bold tracking-wide">📑 Bookmark manager</div>
 
@@ -60,28 +65,41 @@
       </div>
     </nav>
 
-    <!-- Page content -->
     <main class="mx-auto max-w-6xl p-4">
-      <NuxtPage />
-    </main>
+
+		<NuxtLoadingIndicator />
+
+		<NuxtLayout>
+			<NuxtPage />
+		</NuxtLayout>
+
+		<!-- Toasts -->
+		<ToastList />
+
+	</main>
+
   </div>
+
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRoute } from 'vue-router';
 
-const route = useRoute();
-const isMenuOpen = ref(false);
+	import { ref } from 'vue';
+	import { useRoute } from 'vue-router';
+	import ToastList from '@/components/ui/ToastList.vue';
 
-const closeMenu = () => {
-  isMenuOpen.value = false;
-};
+	const route = useRoute();
+	const isMenuOpen = ref(false);
 
-const links = [
-  { label: 'Start', to: '/' },
-  { label: 'Bookmarks', to: '/bookmarks' },
-  { label: 'About', to: '/about' },
-  { label: 'Contact', to: '/contact' },
-];
+	const closeMenu = () => {
+		isMenuOpen.value = false;
+	};
+
+	const links = [
+		{ label: 'Start', to: '/' },
+		{ label: 'Bookmarks', to: '/bookmarks' },
+		{ label: 'About', to: '/about' },
+		{ label: 'Contact', to: '/contact' },
+	];
+
 </script>

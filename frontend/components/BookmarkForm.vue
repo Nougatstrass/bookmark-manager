@@ -109,8 +109,8 @@
 
         </div>
 
-        <p v-if="errorMsg" aria-live="polite" class="text-red-600 text-sm">{{ errorMsg }}</p>
-        <p v-if="successMsg" aria-live="polite" class="text-green-700 text-sm">{{ successMsg }}</p>
+        <!-- <p v-if="errorMsg" aria-live="polite" class="text-red-600 text-sm">{{ errorMsg }}</p>
+        <p v-if="successMsg" aria-live="polite" class="text-green-700 text-sm">{{ successMsg }}</p> -->
 
     </form>
 
@@ -121,6 +121,7 @@
     import { reactive, ref, onMounted, nextTick } from 'vue'
     import { useBookmarks } from '@/composables/useBookmarks'
     import type { BookmarkWithTags } from '@/types/api'
+    import { useToast } from '@/composables/useToast'
 
     const emit = defineEmits<{ (e: 'created', bookmark: BookmarkWithTags): void }>()
     const { create } = useBookmarks()
@@ -140,6 +141,8 @@
 
     // First-field autofocus
     const urlInputEl = ref<HTMLInputElement | null>(null)
+
+    const toast = useToast()
 
     onMounted(async () => {
         await nextTick()
@@ -164,8 +167,6 @@
         form.tagsInput = ''
         form.favorite = false
         form.showOnStart = false
-        errorMsg.value = null
-        successMsg.value = null
 
         // Refocus after reset
         nextTick(() => urlInputEl.value?.focus())
@@ -193,15 +194,21 @@
             }
 
             const created = await create(payload)
-            successMsg.value = 'Bookmark created!'
+
+            toast.success('Bookmark created!')
             emit('created', created)
-            // Optional: reset after success
             reset()
 
         } catch(e: any) {
-            // Backend may send { error: "...", details?: ... }
-            errorMsg.value = 
-                e?.data?.error || e?.message || 'Failed to create bookmark. Please try again.'
+
+            const msg = e?.data?.error || e?.message || ''
+
+            if (e?.status === 409 || /already exists/i.test(msg)) {
+                toast.error('A bookmark with this URL already exists')
+            } else {
+                toast.error(msg || 'Failed to create bookmark. Please try again.')
+            }
+
         } finally {
             submitting.value = false
         }

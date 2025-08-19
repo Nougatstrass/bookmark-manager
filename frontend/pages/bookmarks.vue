@@ -137,8 +137,11 @@
 	import BookmarkForm from '@/components/BookmarkForm.vue'
 	import BookmarkEditModal from '@/components/BookmarkEditModal.vue'
 	import Modal from '@/components/ui/Modal.vue'
+	import { useToast } from '@/composables/useToast'
 
 	const { list, remove } = useBookmarks()
+
+	const toast = useToast()
 
 	// SSR fetch, automatically reactive
 	const { data, pending, error, refresh } = await list()
@@ -206,14 +209,17 @@
 			// 4. Optionally refresh to sync with server (keeps tags, dates 100 % accurate)
 			await refresh()
 
+			toast.success('Bookmark deleted')
+
 			// 5. Close the confirm dialog
 			closeConfirm()
 
 		} catch(e: any) {
 			// Roll back on failure
 			items.value = previous
+			toast.error('Could not delete bookmark. Please try again.')
 			console.error('Delete failed:', e?.data.error || e?.message)
-			// You can also surface a toast here later
+			
 		} finally {
 			deleting.value = false
 		}
