@@ -13,14 +13,25 @@
 		</div>
 
 		<!-- Create form -->
-		<BookmarkForm @created="handleCreated" />
-
+		<div id="new-bookmark">
+			<BookmarkForm @created="handleCreated" />
+		</div>
+		
 		<!-- Skeletons for initial load -->
 		<div v-if="isInitialLoading" aria-live="polite" class="space-y-3">
 			<BookmarkSkeleton v-for="i in 3" :key="i" />
 		</div>
 
 		<div v-else-if="error" class="text-red-600">Failed to load bookmarks</div>
+
+		<!-- Empty state -->
+		<EmptyState 
+			v-else-if="showEmpty" 
+			@action="scrollToNew" 
+			title="No bookmarks yet" 
+			description="Add your first bookmark to get started" 
+			buttonLabel="Add a new bookmark" 
+		/>
 
 		<!-- List -->
 		<ul v-else class="space-y-3">
@@ -144,6 +155,7 @@
 	import Modal from '@/components/ui/Modal.vue'
 	import BookmarkSkeleton from '@/components/ui/BookmarkSkeleton.vue'
 	import { useToast } from '@/composables/useToast'
+	import EmptyState from '@/components/ui/EmptyState.vue'
 
 	const { list, remove } = useBookmarks()
 
@@ -167,6 +179,17 @@
 		const hasData = Array.isArray(data.value) && data.value.length > 0
 		return pending.value && !hasData 
 	})
+
+	const showEmpty = computed(() => {
+		const hasData = Array.isArray(items.value) && items.value.length > 0
+		return !pending.value && !error.value && !hasData
+	})
+
+	// Smooth scroll to the create form
+	const scrollToNew = () => {
+		const el = document.getElementById('new-bookmark')
+		el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+	}
 
 	// Edit modal state
 	const editOpen = ref(false)
