@@ -15,7 +15,11 @@
 		<!-- Create form -->
 		<BookmarkForm @created="handleCreated" />
 
-		<div v-if="pending" class="text-gray-500">Loading...</div>
+		<!-- Skeletons for initial load -->
+		<div v-if="isInitialLoading" aria-live="polite" class="space-y-3">
+			<BookmarkSkeleton v-for="i in 3" :key="i" />
+		</div>
+
 		<div v-else-if="error" class="text-red-600">Failed to load bookmarks</div>
 
 		<!-- List -->
@@ -132,11 +136,13 @@
 
 <script setup lang="ts">
 
+	import { computed, ref, watchEffect } from 'vue'
 	import type { BookmarkWithTags } from '@/types/api'
 	import { useBookmarks } from '@/composables/useBookmarks'
 	import BookmarkForm from '@/components/BookmarkForm.vue'
 	import BookmarkEditModal from '@/components/BookmarkEditModal.vue'
 	import Modal from '@/components/ui/Modal.vue'
+	import BookmarkSkeleton from '@/components/ui/BookmarkSkeleton.vue'
 	import { useToast } from '@/composables/useToast'
 
 	const { list, remove } = useBookmarks()
@@ -154,6 +160,12 @@
 	// Kepp items in sync with server data on initial load/refresh
 	watchEffect(() => {
 		items.value = (data.value ?? []) as BookmarkWithTags[]
+	})
+
+	// Show skeletons only when loading AND there's no data yet
+	const isInitialLoading = computed(() => {
+		const hasData = Array.isArray(data.value) && data.value.length > 0
+		return pending.value && !hasData 
 	})
 
 	// Edit modal state
