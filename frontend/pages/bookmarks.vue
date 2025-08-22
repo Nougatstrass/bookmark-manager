@@ -1,7 +1,7 @@
 
 <template>
 
-	<section class="p-6 space-y-6">
+	<section class="p-6 space-y-6 scroll-smooth">
 
 		<div class="flex items-center justify-between">
 			<h1 class="text-3xl font-bold">Bookmarks</h1>
@@ -33,7 +33,12 @@
 			buttonLabel="Add a new bookmark" 
 		/>
 
-		<!-- List -->
+		<!-- Empty state or list -->
+		<EmptyState 
+			v-if="!pending && !error && items.length === 0" 
+			@action="refresh" 
+		/>
+
 		<ul v-else class="space-y-3">
 
 			<li v-for="b in items" :key="b.id" class="rounded border bg-white p-4 shadow-sm">
@@ -146,7 +151,7 @@
 </template>
 
 <script setup lang="ts">
-
+	
 	import { computed, ref, watchEffect } from 'vue'
 	import type { BookmarkWithTags } from '@/types/api'
 	import { useBookmarks } from '@/composables/useBookmarks'
@@ -156,20 +161,29 @@
 	import BookmarkSkeleton from '@/components/ui/BookmarkSkeleton.vue'
 	import { useToast } from '@/composables/useToast'
 	import EmptyState from '@/components/ui/EmptyState.vue'
+	import { useRoute } from 'vue-router'
 
+	const route = useRoute()
+	
 	const { list, remove } = useBookmarks()
 
 	const toast = useToast()
 
+	// COMMENTED OUT FOR TESTING PURPOSE - TURN ON AT PRODUCTION
 	// SSR fetch, automatically reactive
-	const { data, pending, error, refresh } = await list()
+	// const { data, pending, error, refresh } = await list()
+
+	// ONLY USED FOR TESTING PURPOSE - COMMENT OUT OR DELETE AT PRODUCTION
+	const { data, pending, error, refresh } = await list({
+		query: { empty: route.query.empty }
+	})
 
 	const bookmarks = computed<BookmarkWithTags[]>(() => (data.value ?? []) as BookmarkWithTags[])
 
 	// Local working list the UI renders
 	const items = ref<BookmarkWithTags[]>([])
 
-	// Kepp items in sync with server data on initial load/refresh
+	// Keep items in sync with server data on initial load/refresh
 	watchEffect(() => {
 		items.value = (data.value ?? []) as BookmarkWithTags[]
 	})
@@ -188,7 +202,18 @@
 	// Smooth scroll to the create form
 	const scrollToNew = () => {
 		const el = document.getElementById('new-bookmark')
+
+		if (!el) return
+
+		// Smooth scroll to the form container
 		el?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+
+		// Brief highlight so users see where to look
+		el.classList.add('ring-2', 'ring-blue-500', 'ring-offset-2')
+		setTimeout(() => el.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2'), 700)
+
+		// Try to focus the first input for quick typing
+		document.getElementById('create-url')?.focus()
 	}
 
 	// Edit modal state

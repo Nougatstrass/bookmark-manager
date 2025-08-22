@@ -27,12 +27,19 @@
 
 <script setup lang="ts">
 
-    defineProps<{
-        title: string
-        description: string
-        buttonLabel: string
-    }>()
+    const props = withDefaults(
+        defineProps<{
+            title?: string
+            description?: string
+            buttonLabel?: string
+        }>(),
+        {
+            title: 'Nothing here yet',
+            description: 'There is no data to show right now',
+            buttonLabel: 'Reload'
+        }
+    )
 
-    defineEmits<{ (e:'action'): void }>()
+    const emit = defineEmits<{ (e:'action'): void }>()
 
 </script>

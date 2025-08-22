@@ -117,7 +117,20 @@ router.post("/", async (req, res) => {
 
 // Fetch all bookmarks with their tags
 router.get("/", async (req, res) => {
+
+    // FOR TESTING PURPOSE (SHOW EMPTY STATE)
+    const q = req.query?.empty
+
+    if (
+        (typeof q === 'string' && q === '1') || 
+        (Array.isArray(q) && q.includes('1'))
+    ) {
+        return res.json([]) // Simulates empty success. Visit: http://localhost:3000/bookmarks?empty=1
+        
+    } // END OF TESTING CODE, REMOVE FOR PRODUCTION
+
     try {
+
         // 1. Get all bookmarks
         const allBookmarks = await db.query.bookmarks.findMany();
 

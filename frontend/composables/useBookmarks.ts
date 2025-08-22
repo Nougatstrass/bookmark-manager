@@ -1,27 +1,31 @@
+
 import type { BookmarkWithTags, Bookmark } from '~/types/api';
 
 export const useBookmarks = () => {
-  const {
-    public: { apiBase },
-  } = useRuntimeConfig();
 
-  const list = (opts?: any) =>
-    useFetch<BookmarkWithTags[]>(`${apiBase}/bookmarks`, {
-      server: true, // SSR okay (talks to http://localhost:3001)
-      ...opts,
-    });
+	const {
+	public: { apiBase },
+	} = useRuntimeConfig();
 
-  const getById = (id: number, opts?: any) =>
-    useFetch<BookmarkWithTags>(`${apiBase}/bookmarks/${id}`, { ...opts });
+	type FetchOpts = Parameters<typeof useFetch<any>>[1]
 
-  const create = (payload: Partial<Bookmark> & { tags?: string[] }) =>
-    $fetch<BookmarkWithTags>(`${apiBase}/bookmarks`, { method: 'POST', body: payload });
+	const list = (opts?: FetchOpts) =>
+	useFetch<BookmarkWithTags[]>(`${apiBase}/bookmarks`, {
+		server: true, // SSR okay (talks to http://localhost:3001)
+		...opts, // We'll pass { query: {...} } from the page
+	});
 
-  const update = (id: number, payload: Partial<Bookmark> & { tags?: string[] }) =>
-    $fetch<BookmarkWithTags>(`${apiBase}/bookmarks/${id}`, { method: 'PUT', body: payload });
+	const getById = (id: number, opts?: any) =>
+	useFetch<BookmarkWithTags>(`${apiBase}/bookmarks/${id}`, { ...opts });
 
-  const remove = (id: number) =>
-    $fetch<{ message: string }>(`${apiBase}/bookmarks/${id}`, { method: 'DELETE' });
+	const create = (payload: Partial<Bookmark> & { tags?: string[] }) =>
+	$fetch<BookmarkWithTags>(`${apiBase}/bookmarks`, { method: 'POST', body: payload });
 
-  return { list, getById, create, update, remove };
+	const update = (id: number, payload: Partial<Bookmark> & { tags?: string[] }) =>
+	$fetch<BookmarkWithTags>(`${apiBase}/bookmarks/${id}`, { method: 'PUT', body: payload });
+
+	const remove = (id: number) =>
+	$fetch<{ message: string }>(`${apiBase}/bookmarks/${id}`, { method: 'DELETE' });
+
+	return { list, getById, create, update, remove };
 };

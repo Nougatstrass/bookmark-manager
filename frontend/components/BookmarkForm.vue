@@ -10,7 +10,7 @@
             <div class="md:col-span-2">
                 <label class="block text-sm font-medium mb-1" for="url">URL *</label>
                 <input 
-                    id="url" 
+                    id="create-url" 
                     ref="urlInputEl" 
                     v-model.trim="form.url" 
                     type="url" 
