@@ -39,8 +39,12 @@
 			@action="refresh" 
 		/>
 
-		<ul v-else class="space-y-3">
-
+		<ul 
+			v-else 
+			:aria-busy="isRefreshing ? 'true' : 'false'" 
+			class="space-y-3" 
+			:class="isRefreshing ? 'motion-safe:animate-pulse' : ''"
+		>
 			<li v-for="b in items" :key="b.id" class="rounded border bg-white p-4 shadow-sm">
 
 				<div class="flex items-start justify-between gap-4">
@@ -68,14 +72,15 @@
 						<!-- Actions -->
 						<button 
 							@click="openEdit(b)" 
+							:disabled="isRefreshing" 
 							title="Edit" 
 							class="ml-3 rounded border px-2 py-1 text-sm hover:bg-gray-50">
 							Edit
 						</button>
 						<button 
 							@click="askDelete(b)" 
+							:disabled="isRefreshing"
 							title="Delete" 
-							:disabled="deleting && toDelete?.id === b.id" 
 							class="rounded border px-2 py-1 text-sm hover:bg-red-50 text-red-600 border-red-300">
 							Delete
 						</button>					
@@ -162,6 +167,9 @@
 	import { useToast } from '@/composables/useToast'
 	import EmptyState from '@/components/ui/EmptyState.vue'
 	import { useRoute } from 'vue-router'
+
+	const hasData = computed(() => (items.value?.length ?? 0) > 0)
+	const isRefreshing = computed(() => pending.value && hasData.value)
 
 	const route = useRoute()
 	

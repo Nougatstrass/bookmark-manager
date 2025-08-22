@@ -4,7 +4,7 @@
     <div 
         role="status" 
         aria-label="Loading bookmark" 
-        class="rounded border bg-white p-4 shadow-sm animate-pulse"
+        class="rounded border bg-white p-4 shadow-sm motion-safe:animate-pulse"
     >
         <div class="flex items-start justify-between gap-4">
 
