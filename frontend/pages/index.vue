@@ -80,13 +80,13 @@
 							title="Favorite" 
 							class="text-yellow-500">★</span>
 
-						<!-- Start marker (since we're on Start page, also show a remove button) -->	
-						<span 
+						<!-- Start marker -->	
+						<!-- <span 
 							title="Shown on Start" 
 							class="rounded border px-2 py-0.5 text-xs text-green-600"
 						>
 							Start
-						</span>
+						</span> -->
 
 						<NuxtLink 
 							to="/bookmarks" 
@@ -94,6 +94,14 @@
 							class="ml-3 rounded border px-2 py-1 text-sm hover:bg-gray-50">
 							Edit
 						</NuxtLink>
+
+						<button 
+							v-if="b.showOnStart" 
+							@click="removeFromStart(b)" 
+							class="rounded border px-2 py-1 text-sm text-red-600 hover:bg-red-50">
+							Remove from Start
+						</button>
+						
 					</div>
 				</div>
 
@@ -115,9 +123,10 @@
 	import { useBookmarks } from '@/composables/useBookmarks'
 	import BookmarkSkeleton from '@/components/ui/BookmarkSkeleton.vue'
 	import EmptyState from '@/components/ui/EmptyState.vue'
+	import { useToast } from '@/composables/useToast'
 
 	// Fetch all bookmarks (or your existing call here)
-	const { list } = useBookmarks()
+	const { update, list } = useBookmarks()
 	const { data, pending, error, refresh } = await list()
 
 	// Local items mirror (same pattern as /bookmarks)
@@ -148,6 +157,21 @@
 		setTimeout(() => el.classList.remove('ring-2', 'ring-blue-500', 'ring-offset-2'), 700)
 
 		document.getElementById('creat-url')?.focus()
+	}
+
+	async function removeFromStart(b: BookmarkWithTags) {
+
+		const toast = useToast()
+		
+		try {
+			await update(b.id, { showOnStart: false })
+			await refresh()
+			toast.success(`Removed "${b.title || b.url}" from Start`)
+			
+		} catch(e) {
+			console.error('Remove from Start failed', e)
+			toast.error('Failed to update bookmark')
+		}
 	}
 
 </script>

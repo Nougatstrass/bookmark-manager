@@ -52,7 +52,7 @@
                     placeholder="Comma-separated, e.g. news, reading, dev" 
                     class="w-full rounded border px-3 py-2 focus:outline-none focus:ring" 
                 />
-                <p>Missing tags will be created automatically</p>
+                <p class="text-xs">Missing tags will be created automatically</p>
             </div>
 
         </div>
