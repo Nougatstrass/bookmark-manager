@@ -187,7 +187,7 @@
             const payload = {
                 url: form.url,
                 title: form.title || undefined,     // Optional
-                description: form.description || undefined,     // Option
+                description: form.description || undefined,     // Optional
                 favorite: form.favorite,
                 showOnStart: form.showOnStart,
                 tags: parseTags(form.tagsInput)

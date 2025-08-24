@@ -118,7 +118,7 @@ router.post("/", async (req, res) => {
 // Fetch all bookmarks with their tags
 router.get("/", async (req, res) => {
 
-    // FOR TESTING PURPOSE (SHOW EMPTY STATE)
+    /* // FOR TESTING PURPOSE (SHOW EMPTY STATE)
     const q = req.query?.empty
 
     if (
@@ -127,7 +127,7 @@ router.get("/", async (req, res) => {
     ) {
         return res.json([]) // Simulates empty success. Visit: http://localhost:3000/bookmarks?empty=1
         
-    } // END OF TESTING CODE, REMOVE FOR PRODUCTION
+    } // END OF TESTING CODE, REMOVE FOR PRODUCTION */
 
     try {
 
